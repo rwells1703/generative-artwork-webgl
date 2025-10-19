@@ -9,10 +9,10 @@
 		<script src="libs/three.js"></script>
 		<script>
 			var scene = new THREE.Scene();
-			
+			scene.background = new THREE.Color(0x072652);
+
 			var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 500);
-			
-			//camera.position.set(10,30,30);
+
 			camera.position.set(20,30,30);
 			camera.lookAt(new THREE.Vector3(0,0,0));
 			
@@ -32,11 +32,11 @@
 			zgeometry.vertices.push(new THREE.Vector3(0,0,-10));
 			zgeometry.vertices.push(new THREE.Vector3(0,0,10));
 			
-			var xmaterial = new THREE.LineBasicMaterial({color: 0xff0000});
+			var xmaterial = new THREE.LineBasicMaterial({color: 0xfaa0ac});
 			var xaxis = new THREE.Line(xgeometry, xmaterial);
-			ymaterial = new THREE.LineBasicMaterial({color: 0x00ff00});
+			ymaterial = new THREE.LineBasicMaterial({color: 0x8cf086});
 			var yaxis = new THREE.Line(ygeometry, ymaterial);
-			zmaterial = new THREE.LineBasicMaterial({color: 0x0000ff});
+			zmaterial = new THREE.LineBasicMaterial({color: 0xb0f6f7});
 			var zaxis = new THREE.Line(zgeometry, zmaterial);
 			
 			scene.add(xaxis);
@@ -44,7 +44,7 @@
 			scene.add(zaxis);
 			
 			var sphere_geometry = new THREE.SphereGeometry(0.5,32,32);
-			var sphere_material = new THREE.MeshBasicMaterial({color:0xffff00});
+			var sphere_material = new THREE.MeshBasicMaterial({color:0x2aceeb});
 			var sphere = new THREE.Mesh(sphere_geometry, sphere_material);
 			scene.add(sphere);
 			
@@ -53,8 +53,8 @@
 			angle = 0;
 			function animate() {
 				requestAnimationFrame(animate);
-				//xaxis.rotation.y += 0.005;
-				//zaxis.rotation.y += 0.005;
+				xaxis.rotation.y += 0.005;
+				zaxis.rotation.y += 0.005;
 				angle = Math.PI/180;
 				var newx = sphere.position.x * Math.cos(angle) - sphere.position.z * Math.sin(angle);
 				var newz = sphere.position.x * Math.sin(angle) + sphere.position.z * Math.cos(angle);
