@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My WebGL Animation Gallery</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .iframe-container {
+            position: relative;
+            width: 70vmin;
+            height: 70vmin;
+            overflow: hidden;
+        }
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: none; /* Hide by default */
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="iframe-container">
+        <iframe id="animationFrame"></iframe>
+    </div>
+
+    <button class="button" onclick="nextAnimation()">Next Animation</button>
+
+    <script>
+        const animations = [
+            'planetary orbit.html',
+            'flashing diamond.html',
+            'pulse gem.html',
+            'mountains.html',
+            'rotation.html',
+            'triangle sea.html'
+        ];
+
+        let currentIndex = 0;
+
+        function loadAnimation() {
+            const iframe = document.getElementById('animationFrame');
+            iframe.src = animations[currentIndex];
+            iframe.style.display = 'block';
+        }
+
+        function nextAnimation() {
+            const iframe = document.getElementById('animationFrame');
+            iframe.src = "";
+            iframe.style.display = 'none';
+
+            currentIndex = (currentIndex + 1) % animations.length;
+            loadAnimation();
+        }
+
+        window.onload = loadAnimation;
+    </script>
+</body>
+</html>
