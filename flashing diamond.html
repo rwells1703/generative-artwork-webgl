@@ -1,0 +1,145 @@
+<html>
+	<head>
+		<style>
+			body { margin: 0; }
+		</style>
+	</head>
+
+	<body>
+		<canvas id="mycanvas"></canvas>
+
+		<script id="vertexShader" type="notjs">
+			attribute vec4 a_position;
+			
+			void main() {
+				gl_Position = a_position;
+			}
+		</script>
+
+		<script id="fragmentShader" type="notjs">
+			precision mediump float;
+			uniform vec4 u_color;
+			
+			void main() {
+				gl_FragColor = u_color;
+			}
+		</script>
+
+		<script>
+			// Create new canvas and context for rendering to
+			function createCanvas() {
+				canvas = document.getElementById("mycanvas");
+				gl = canvas.getContext("webgl");
+			}
+			
+			// Make the canvas a square that fits the window
+			function resizeCanvas() {
+				var marginFraction = 20;
+				if (window.innerHeight > window.innerWidth) {
+					console.log("tall view");
+					var view = "tall"
+					var margin = window.innerWidth/marginFraction;
+					canvas.style.margin = margin.toString();
+					
+					canvas.width = window.innerWidth - 2*margin;        
+					canvas.height = window.innerWidth - 2*margin;
+				} 
+				else {
+					console.log("wide view");
+					var view = "wide"
+					var margin = window.innerWidth/marginFraction;
+					canvas.style.margin = margin.toString();
+						
+					canvas.width = window.innerHeight - 2*margin;
+					canvas.height = window.innerHeight - 2*margin;
+				}
+				
+				gl.viewport(0,0,canvas.width,canvas.height);
+			}
+			
+			// Creates a new shader
+			function createShader(gl, type, source) {
+				var shader = gl.createShader(type);
+				gl.shaderSource(shader, source);
+				gl.compileShader(shader);
+				return shader;
+			}
+			
+			// Creates a new program from the vertex and fragment shaders
+			function createProgram() {
+				// Create the vertex and fragment shaders
+				var vertexShader = createShader(gl, gl.VERTEX_SHADER, document.getElementById("vertexShader").text);
+				var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, document.getElementById("fragmentShader").text);
+				
+				// Create a new program and attach the vertex and fragment shader
+				var program = gl.createProgram();
+				gl.attachShader(program, vertexShader);
+				gl.attachShader(program, fragmentShader);
+				
+				// Link and return the program
+				gl.linkProgram(program);
+				return program;
+			}
+			
+			// Creates a triangle
+			function createTriangle(x, y, width, height) {
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([x,y,x+width,y,x,y+height]), gl.STATIC_DRAW);
+				gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
+				gl.drawArrays(gl.TRIANGLES, 0, 3);
+			}
+
+			function main() {
+				// Creates the canvas element, gets a context for it and then resizes it
+				createCanvas();
+				resizeCanvas();
+				// Creates the program containing the shaders
+				program = createProgram();
+				
+				// Locates the position attribute of the program so that we can pass vertices into it from the position buffer
+				positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				// Creates a new position buffer for storing points
+				positionBuffer = gl.createBuffer();
+				// Binds the buffer to the ARRAY_BUFFER bind point
+				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+				positions = [-0.3,-0.5,
+								 0.5,0.4,
+								 0.5,-0.5,
+								 
+								 -0.5,-0.4,
+								 0.4,0.5,
+								 -0.5,0.5];
+				// Adds the positions to the ARRAY_BUFFER
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+				requestAnimationFrame(render);
+			}
+			
+			// RENDERING BEGINS
+			function render() {
+				// Use the program
+				gl.useProgram(program);
+				
+				// Fill screen with white
+				gl.clearColor(1,1,1,1);
+				gl.clear(gl.COLOR_BUFFER_BIT);
+				
+				// Turn on the position attribute in the GLSL shader
+				gl.enableVertexAttribArray(positionAttributeLocation);
+				
+				// Tell the GLSL shader how to deal with the input vertices
+				gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+				
+				// Get the location of the color uniform and declare as a global variable
+				colorUniformLocation = gl.getUniformLocation(program, "u_color");
+				
+				// Render
+				createTriangle(0,0,0.5,0.5);
+				createTriangle(0,0,-0.5,-0.5);
+				createTriangle(0,0,0.5,-0.5);
+				createTriangle(0,0,-0.5,0.5);
+				requestAnimationFrame(render);
+			}
+			main();
+			
+		</script>
+	</body>
+</html>

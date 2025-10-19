@@ -1,0 +1,125 @@
+<html>
+	<head>
+		<style>
+			body { margin: 0; }
+			canvas { border: solid black; }
+		</style>
+	</head>
+
+	<body>
+		<canvas id="mycanvas"></canvas>
+
+		<script id="vertexShader" type="notjs">
+			precision mediump float;
+			attribute vec4 a_position;
+			attribute vec4 a_vert_color;
+			varying vec4 v_frag_color;
+			
+			void main() {
+				v_frag_color = a_vert_color;
+				gl_Position = a_position;
+			}
+		</script>
+
+		<script id="fragmentShader" type="notjs">
+			precision mediump float;
+			varying vec4 v_frag_color;
+			
+			void main() {
+				gl_FragColor = v_frag_color;
+			}
+		</script>
+
+		<script>
+			// Create new html5 canvas and wegbl context
+			canvas = document.getElementById("mycanvas");
+			gl = canvas.getContext("webgl");
+			
+			// Make the canvas a square that fits the window
+			var marginFraction = 30;
+			var borderThickness = 1;
+			
+			canvas.style.borderWidth = borderThickness;
+			
+			if (window.innerHeight > window.innerWidth) {
+				console.log("tall view");
+				var view = "tall";
+				var margin = window.innerWidth/marginFraction;
+				canvas.style.margin = margin.toString();
+					
+				canvas.width = window.innerWidth - 2*margin - 2*borderThickness;        
+				canvas.height = window.innerWidth - 2*margin - 2*borderThickness;
+			}
+			else {
+				console.log("wide view");
+				var view = "wide";
+				var margin = window.innerWidth/marginFraction;
+				canvas.style.margin = margin.toString();
+					
+				canvas.width = window.innerHeight - 2*margin - 2*borderThickness;
+				canvas.height = window.innerHeight - 2*margin - 2*borderThickness;
+			}
+			
+			// Size the viewport according to the canvas size
+			gl.viewport(0,0,canvas.width,canvas.height);
+			
+			// Create and compile vertex shader
+			var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertexShader, document.getElementById("vertexShader").text);
+			gl.compileShader(vertexShader);
+			if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+				console.error("vertex shader failed to compile", gl.getShaderInfoLog(vertexShader));
+			}
+			
+			// Create and compile fragment shader
+			var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragmentShader, document.getElementById("fragmentShader").text);
+			gl.compileShader(fragmentShader);
+			if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+				console.error("fragment shader failed to compile", gl.getShaderInfoLog(fragmentShader));
+			}
+			
+			// Creates a new program from the vertex and fragment shaders
+			var program = gl.createProgram();
+			gl.attachShader(program, vertexShader);
+			gl.attachShader(program, fragmentShader);
+			gl.linkProgram(program);
+			
+			var vertices = [-1.0,-1.0, 1.0,0.0,0.0,1.0,
+							-1.0, 1.0, 0.0,1.0,0.0,1.0,
+							 1.0, 0.0, 0.0,0.0,1.0,1.0];
+							 
+			var positionElements = 2;
+			var colorElements = 4;
+			var totalElements = positionElements + colorElements;
+			
+			var vertexBufferObject = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, vertexBufferObject);
+			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+			
+			var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+			gl.vertexAttribPointer(positionAttributeLocation, positionElements, gl.FLOAT, gl.FALSE, totalElements*Float32Array.BYTES_PER_ELEMENT, 0);
+			
+			var colorAttributeLocation = gl.getAttribLocation(program, "a_vert_color");
+			gl.vertexAttribPointer(colorAttributeLocation, colorElements, gl.FLOAT, gl.FALSE, totalElements*Float32Array.BYTES_PER_ELEMENT, positionElements*Float32Array.BYTES_PER_ELEMENT);
+			
+			gl.enableVertexAttribArray(positionAttributeLocation);
+			gl.enableVertexAttribArray(colorAttributeLocation);
+			
+			// The main render loop
+			var render = function() {
+				gl.clearColor(1.0, 1.0, 1.0, 1.0);
+				gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+				gl.useProgram(program);
+				gl.drawArrays(gl.TRIANGLES, 0, vertices.length/6);
+				// Continue render loop
+			    //requestAnimationFrame(render);
+			}
+			
+			// Begins the render loop
+			requestAnimationFrame(render);
+			
+			
+		</script>
+	</body>
+</html>

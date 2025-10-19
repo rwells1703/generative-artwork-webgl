@@ -1,0 +1,184 @@
+<html>
+	<head>
+		<style>
+			body { margin: 0; }
+			canvas { border: 1px solid black; }
+		</style>
+	</head>
+
+	<body>
+		<canvas id="mycanvas"></canvas>
+
+		<script id="vertexShader" type="notjs">
+			attribute vec4 a_position;
+            uniform vec4 u_translation;
+
+			void main() {
+				gl_Position = a_position + u_translation;
+			}
+		</script>
+
+		<script id="fragmentShader" type="notjs">
+			precision mediump float;
+			uniform vec4 u_color;
+
+			void main() {
+				gl_FragColor = u_color;
+			}
+		</script>
+
+		<script>
+			// Create new canvas and context for rendering to
+			function createCanvas() {
+				canvas = document.getElementById("mycanvas");
+				gl = canvas.getContext("webgl");
+			}
+			
+			// Make the canvas a square that fits the window
+			function resizeCanvas() {
+				var marginFraction = 40;
+				if (window.innerHeight > window.innerWidth) {
+					console.log("tall view");
+					var view = "tall"
+					var margin = window.innerWidth/marginFraction;
+					canvas.style.margin = margin.toString();
+					
+					canvas.width = window.innerWidth - 2*margin;        
+					canvas.height = window.innerWidth - 2*margin;
+				} 
+				else {
+					console.log("wide view");
+					var view = "wide"
+					var margin = window.innerWidth/marginFraction;
+					canvas.style.margin = margin.toString();
+					
+					canvas.width = window.innerHeight - 2*margin;
+					canvas.height = window.innerHeight - 2*margin;
+				}
+				
+				gl.viewport(0,0,canvas.width,canvas.height);
+			}
+			
+			// Creates a new shader
+			function createShader(gl, type, source) {
+				var shader = gl.createShader(type);
+				gl.shaderSource(shader, source);
+				gl.compileShader(shader);
+				return shader;
+			}
+			
+			// Creates a new program from the vertex and fragment shaders
+			function createProgram() {
+				// Create the vertex and fragment shaders
+				var vertexShader = createShader(gl, gl.VERTEX_SHADER, document.getElementById("vertexShader").text);
+				var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, document.getElementById("fragmentShader").text);
+				
+				// Create a new program and attach the vertex and fragment shader
+				var program = gl.createProgram();
+				gl.attachShader(program, vertexShader);
+				gl.attachShader(program, fragmentShader);
+				
+				// Link and return the program
+				gl.linkProgram(program);
+				return program;
+			}
+			
+			// Renders a triangle of vertices
+			function render2DVertices(vertices, colors, translation, rotation) {
+				vertices = translate2DVertices(vertices, translation);
+				vertices = rotate2DVertices(vertices, rotation);
+				
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+			    gl.uniform4f(colorUniformLocation, colors[0] / 255, colors[1] / 255, colors[2] / 255, colors[3] / 255);
+			    //gl.uniform4f(translationUniformLocation, translation[0], translation[1], 0, 0);
+				gl.uniform4f(translationUniformLocation, 0, 0, 0, 0);
+                gl.drawArrays(gl.TRIANGLES, 0, vertices.length/2);
+            }
+			
+			// Shifts a set of 2D vertices by a set amount
+			function translate2DVertices(vertices, translation) {	
+				var v = 0;
+				while (v < vertices.length) {
+					vertices[v] = vertices[v] + translation[0];
+					vertices[v+1] = vertices[v+1] + translation[1];	
+					v += 2
+				}
+				return vertices;
+			}
+			
+			// Rotates a set of 2D vertices by a set angle anticlockwise
+			function rotate2DVertices(vertices, rotation) {
+				var v = 0;
+				while (v < vertices.length) {
+					// Based off of standard rotation matrix
+					var x = vertices[v] * Math.cos(rotation) + vertices[v+1] * Math.sin(rotation);
+					var y = vertices[v] * Math.sin(rotation) - vertices[v+1] * Math.cos(rotation);
+					vertices[v] = x;
+					vertices[v+1] = y;
+					v += 2;
+				}
+				return vertices;
+			}
+			
+			// RENDERING BEGINS
+			function render() {
+			    // Use the program
+			    gl.useProgram(program);
+
+			    // Fill screen with white
+			    gl.clearColor(1, 1, 1, 1);
+			    gl.clear(gl.COLOR_BUFFER_BIT);
+
+			    // Turn on the position attribute in the GLSL shader
+			    gl.enableVertexAttribArray(positionAttributeLocation);
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    // Tell the GLSL shader how to deal with the input vertices
+			    gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+			    // Render
+			    //pink = [255, 90, 90, 255];
+				pink = [90, 90, 255, 255];
+			    yellow = [255, 200, 0, 255];
+				
+                // Bottom left back
+			    render2DVertices([-1, 1, -1, -1, 1, -1], [pink[0], pink[1], pink[2], 180], [0, 0, 0], rotation);
+			    // Top right back
+			    render2DVertices([-1, 1, 1, 1, 1, -1], [yellow[0], yellow[1], yellow[2], 180], [0, 0, 0], rotation);
+		
+			    // Middle left front
+			    //render2DVertices([0.5, 0, 0, -0.5, 0, 0.5], [yellow[0], yellow[1], yellow[2], 255], [-0.375, -0.125], rotation);
+			    //render2DVertices([-0.5, 0, 0, -0.5, 0, 0.5], [pink[0], pink[1], pink[2], 255], [0.375, 0.125], rotation);
+				render2DVertices([0.5, 0, 0, -0.5, 0, 0.5], [yellow[0], yellow[1], yellow[2], 255], [0, 0], rotation);
+			    render2DVertices([-0.5, 0, 0, -0.5, 0, 0.5], [pink[0], pink[1], pink[2], 255], [0, 0], rotation);
+				
+				rotation += 0.05;
+				console.log(rotation);
+			    requestAnimationFrame(render);
+			}
+
+			function main() {
+				createCanvas();
+				resizeCanvas();
+
+				program = createProgram();
+				
+				// Locates the position attribute of the program so that we can pass vertices into it from the position buffer
+				positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+				
+				colorUniformLocation = gl.getUniformLocation(program, "u_color");
+				translationUniformLocation = gl.getUniformLocation(program, "u_translation");
+
+				positionBuffer = gl.createBuffer();
+				
+				rotation = 0;
+				
+                // The main render loop
+				requestAnimationFrame(render);
+			}
+
+			main();
+		</script>
+	</body>
+</html>
